@@ -39,21 +39,26 @@ public class Scheduler {
 
 		@Override
 		public void doAdded(JsonNode node) {
-			String scheduler = getScheduler(node);
-			if (!scheduler.equals("bocloud-schduler")) {
+			// not use this scheduler
+			if (!getScheduler(node).equals("bocloud-schduler")
+					// pod has scheduled
+					|| getNodeName(node) != null) {
+				// ignore here
 				return;
 			}
 			
-			// caching all pods
-			// we ignore here
+			// please extends it according your demands
 			
+			// get pod name
 			String pod  = getName(node);
-			String host = selectNode();
 			
-			JsonNode binding = getBinding(pod, host);
+			// select a node
+			String host = selectNode();
 			
 			try {
 				
+				// finish scheduling
+				JsonNode binding = getBinding(pod, host);
 				kubeClient.bindingResource(binding);
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -90,7 +95,8 @@ public class Scheduler {
 
 		@Override
 		public void doDeleted(JsonNode node) {
-			if (!getScheduler(node).equals("bocloud-schduler")) {
+			if (!getScheduler(node).equals("bocloud-schduler")
+					|| getNodeName(node) != null) {
 				return;
 			}
 		}
@@ -102,6 +108,11 @@ public class Scheduler {
 		
 		protected String getScheduler(JsonNode node) {
 			return node.get("spec").get("schedulerName").asText();
+		}
+		
+		protected String getNodeName(JsonNode node) {
+			return !node.get("spec").has("nodeName") ? null :
+					node.get("spec").get("nodeName").asText();
 		}
 	}
 	
