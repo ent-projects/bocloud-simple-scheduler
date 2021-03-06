@@ -7,8 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.kubesys.KubernetesClient;
 import com.github.kubesys.KubernetesWatcher;
 
@@ -28,6 +26,7 @@ public class Scheduler {
 
 	public void start() throws Exception {
 		client.watchResources("Node", new NodeChangedWatcher(client));
+		Thread.sleep(1000);
 		client.watchResources("Pod", new doScheduling(client));
 	}
 
@@ -49,39 +48,16 @@ public class Scheduler {
 			
 			// please extends it according your demands
 			
-			// get pod name
-			String pod  = getName(node);
-			
 			// select a node
 			String host = selectNode();
 			
 			try {
-				
-				// finish scheduling
-				JsonNode binding = getBinding(pod, host);
-				kubeClient.bindingResource(binding);
+				kubeClient.bindingResource(node, host);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
 
-		protected JsonNode getBinding(String pod, String host) {
-			ObjectNode binding = new ObjectMapper().createObjectNode();
-			binding.put("apiVersion", "v1");
-			binding.put("kind", "Binding");
-			
-			ObjectNode metadata = new ObjectMapper().createObjectNode();
-			metadata.put("name", pod);
-			binding.set("metadata", metadata);
-			
-			ObjectNode target = new ObjectMapper().createObjectNode();
-			target.put("apiVersion", "v1");
-			target.put("kind", "Node");
-			target.put("name", host);
-			binding.set("target", target);
-			
-			return binding;
-		}
 
 		protected String selectNode() {
 			String host = nodes.get(0);
