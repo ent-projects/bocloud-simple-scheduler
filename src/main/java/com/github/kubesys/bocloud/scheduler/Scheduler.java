@@ -71,8 +71,7 @@ public class Scheduler {
 
 		@Override
 		public void doDeleted(JsonNode node) {
-			if (!getScheduler(node).equals("bocloud-schduler")
-					|| getNodeName(node) != null) {
+			if (!getScheduler(node).equals("bocloud-schduler")) {
 				return;
 			}
 		}
